@@ -1,15 +1,20 @@
 {
   "dependencies": {
-    "mssql1": {
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:WhereYouAtCoreApiContext"
-    },
     "secrets1": {
       "type": "secrets"
     },
+    "apis1": {
+      "type": "apis"
+    },
     "mssql2": {
+      "ignored": "true",
       "type": "mssql",
       "connectionId": "ConnectionStrings:WhereYouAtConnectionString"
+    },
+    "mssql1": {
+      "ignored": "true",
+      "type": "mssql",
+      "connectionId": "ConnectionStrings:WhereYouAtCoreApiContext"
     }
   }
 }

@@ -25,61 +25,75 @@ namespace WhereYouAtCoreApi.Controllers {
         }
 
         // GET: api/<ValuesController>
-        [HttpGet]
+/*        [HttpGet]
         public IEnumerable<string> Get() {
             return new string[] { "value1", "value2" };
-        }
+        }*/
 
         // GET api/<ValuesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id) {
-            return "value";
-        }
+        [HttpGet("{tripcode}")]
+        public OperationResult Get(string tripcode) => tripsRepository.GetAllMemberLocations(tripcode);
 
         // POST api/<ValuesController>
         [HttpPost]
-        public OperationResults Post([FromBody] ApiRequest request) {
+        public OperationResult Post([FromBody] ApiRequest request) {
 
-
-
-            OperationResults results = new OperationResults();
-            request = new ApiRequest();
-            request.Function = ApiRequest.CREATE_NEW_TRIP;
-            
-            // DataRepository repo = new DataRepository(this);
-            // string constring = .GetConnectionString();
+            OperationResults results = new();
+            OperationResult result = new();
+            request.Function = ApiRequest.TEST_FUNCTION;
+            long memberid = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            request.Arguments.Add(new("memberid", memberid));
 
             switch (request.Function) {
                 case ApiRequest.CREATE_NEW_TRIP:
-                    OperationResult result = tripsRepository.CreateTrip(
+                    result = tripsRepository.CreateTrip(
                         DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), 
                         false
                     );
-                    result.WasSuccessful = false;
-                    results.allResults.Add(result);
-                    return results;
+                    result.WasSuccessful = true;
+                    return result;
                 case ApiRequest.UPDATE_TRIP:
-                    result = new OperationResult();
+                    result = tripsRepository.UpdateTrip(
+                        "1p4e",
+                        1660256336756,
+                        "some json value"
+                    );
+                    result = new() {
+                        WasSuccessful = true
+                    };
+                    return result;
+                case ApiRequest.TEST_FUNCTION:
+                    string tripcode = MakePsuedoEntries();
+                    result = new();
                     result.WasSuccessful = true;
-                    results.allResults.Add(result);
-                    return results;
+                    result.Result = "Created fake trip: " + tripcode;
+                    return result;
                 default:
-                    result = new OperationResult();
+                    result = new();
                     result.WasSuccessful = true;
-                    results.allResults.Add(result);
-                    return results;
+                    return result;
             }
 
         }
 
-        // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value) {
+        private string MakePsuedoEntries() {
+            double memberid = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            OperationResult result = tripsRepository.CreateTrip(memberid);
+
+            for (int i = 0; i < 15; i++) {
+                tripsRepository.UpdateTrip(result!.Result!.ToString()!, memberid + i, "{ \"lat\": 43.88842, \"lon\": 16.555452 } ");
+            }
+            return result!.Result!.ToString()!;
         }
 
+        // PUT api/<ValuesController>/5
+/*        [HttpPut("{tripcode}")]
+        public void Put(int id, [FromBody] string value) {
+        }*/
+
         // DELETE api/<ValuesController>/5
-        [HttpDelete("{id}")]
+/*        [HttpDelete("{id}")]
         public void Delete(int id) {
-        }
+        }*/
     }
 }

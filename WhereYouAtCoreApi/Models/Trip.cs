@@ -16,7 +16,7 @@ namespace WhereYouAt.Api {
 		public string? tripcode;
 		public double? createdon;
 		public double? createdby;
-		public List<TripMember>? members = new();
+		public List<LocUpdate>? members = new();
 
 		public Trip() {}
 
@@ -25,9 +25,9 @@ namespace WhereYouAt.Api {
 			this.createdon = DateTime.Now.ToOADate();
 		}
 
-		public Trip(string tripcode, long memberid) {
+		public Trip(string tripcode, long memberid, decimal lat, decimal lon) {
 			this.tripcode = tripcode;
-			this.members.Add(new TripMember(memberid));
+			this.members.Add(new LocUpdate(tripcode, memberid, lat, lon));
 		}
 
 		public string ToJson() {

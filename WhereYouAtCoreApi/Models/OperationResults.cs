@@ -29,7 +29,7 @@ namespace WhereYouAt.Api {
 
 		public OperationResult() { }
 
-		public OperationResult(bool wasSuccessful, string operationSummary, object result) {
+		public OperationResult(bool wasSuccessful, string operationSummary, object? result) {
 			this.WasSuccessful = wasSuccessful;
 			this.OperationSummary = operationSummary;
 			this.Result = result;
