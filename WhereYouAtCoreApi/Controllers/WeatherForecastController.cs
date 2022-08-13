@@ -3,7 +3,7 @@ using WhereYouAt.Api;
 using WhereYouAtCoreApi.Models;
 
 namespace WhereYouAtCoreApi.Controllers {
-    [ApiController]
+    /*[ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase {
         private static readonly string[] Summaries = new[]
@@ -21,5 +21,5 @@ namespace WhereYouAtCoreApi.Controllers {
             })
             .ToArray();
         }
-    }
+    }*/
 }

@@ -1,9 +1,10 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
-using WhereYouAt.Api;
 using WhereYouAtCoreApi.Models;
+using WhereYouAtCoreApi.Models.Results;
 
-namespace WhereYouAtCoreApi.Data {
+namespace WhereYouAtCoreApi.Data
+{
     public class TripsRepository : MainRepository {
         
         public TripsRepository(IConfiguration config) : base(config) {
@@ -19,10 +20,13 @@ namespace WhereYouAtCoreApi.Data {
             SqlConnection myConn = new SqlConnection(connectionString);
             try {
                 myConn.Open();
-                SqlCommand cmd = new SqlCommand("SELECT [tripcode] FROM [trips] WHERE [tripcode] = @code", myConn);
+                SqlCommand cmd = new SqlCommand(
+                    "SELECT [tripcode] " +
+                    "FROM [trips] " +
+                    "WHERE [tripcode] = @code", myConn
+                );
                 cmd.Parameters.AddWithValue("@code", tripcode);
                 SqlDataAdapter da = new SqlDataAdapter(cmd);
-
                 DataSet ds = new DataSet();
                 da.Fill(ds);
                 return ds.Tables[0].Rows.Count > 0;
@@ -39,7 +43,7 @@ namespace WhereYouAtCoreApi.Data {
         /// <param name="length">The character count of the resultant string</param>
         /// <returns></returns>
         private string generateTripcode(int length) {
-            string path = Path.GetRandomFileName();
+            string path = Path.GetRandomFileName().ToUpper();
             path = path.Replace(".", ""); // Remove period.
             return path.Substring(0, length);  // Return 8 character string
         }
@@ -49,41 +53,37 @@ namespace WhereYouAtCoreApi.Data {
         /// </summary>
         /// <param name="createdby"></param>
         /// <returns></returns>
-        public OperationResult CreateTrip(double createdby, bool testmode = false) {
-            bool isunique = false;
-            string potentialTripcode = "";
+        public ApiBaseResult CreateTrip(double createdby) {
+            bool codeIsUnique = false;
+            string? newdTripCode = null;
+            SqlConnection myConn = new(connectionString);
 
-            if (testmode) {
-                potentialTripcode = "0000";
-            } else {
-                // Create unique trip code then ensure that it doesn't already exist in the trip table.
-                while (!isunique) {
-                    potentialTripcode = generateTripcode(4);
-                    isunique = !TripCodeAlreadyExists(potentialTripcode);
-                }
+            // Create unique trip code then ensure that it doesn't already exist in the trip table.
+            while (!codeIsUnique) {
+                newdTripCode = generateTripcode(5);
+                codeIsUnique = !TripCodeAlreadyExists(newdTripCode);
             }
-
-            SqlConnection myConn = new SqlConnection(connectionString);
 
             try {
                 myConn.Open();
-                SqlCommand cmd = new SqlCommand("SELECT * FROM [trips] WHERE 1=2", myConn);
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-                SqlCommandBuilder cb = new SqlCommandBuilder(da);
-                DataSet ds = new DataSet();
+                SqlCommand cmd = new(
+                    "SELECT * " +
+                    "FROM [trips] " +
+                    "WHERE 1=2", myConn);
+                SqlDataAdapter da = new(cmd);
+                SqlCommandBuilder cb = new(da);
+                DataSet ds = new();
                 da.Fill(ds);
                 DataRow dr = ds.Tables[0].NewRow();
-                dr["tripcode"] = potentialTripcode;
+                dr["tripcode"] = newdTripCode!;
                 dr["createdon"] = DateTime.UtcNow;
                 dr["createdby"] = createdby;
                 ds.Tables[0].Rows.Add(dr);
                 da.Update(ds);
-
-                return new OperationResult(true, "CreateTrip", potentialTripcode);
-
+                return new ApiBaseResult(true, "CreateTrip", newdTripCode);
             } catch (Exception e) {
                 myConn.Close();
-                return new OperationResult(false, "CreateTrip", e.Message);
+                return new ApiBaseResult(false, "CreateTrip", e.Message);
             } finally {
                 myConn.Close();
             }
@@ -95,7 +95,7 @@ namespace WhereYouAtCoreApi.Data {
 		/// <param name="tripcode"></param>
 		/// <param name="userid"></param>
 		/// <returns>An OperationResult object that will really only contain the userid of the user that prompted the update (or an error if applicable).</returns>
-		public OperationResult UpdateTrip(string tripcode, double userid, string? locationJson = null) {
+		public ApiBaseResult UpdateTrip(string tripcode, double userid, string? locationJson = null) {
             SqlConnection myConn = new (connectionString);
             try {
                 myConn.Open();
@@ -118,10 +118,10 @@ namespace WhereYouAtCoreApi.Data {
                     ds.Tables[0].Rows[0]["json"] = locationJson;
                 }
                 da.Update(ds);
-                return new OperationResult(true, "UpdateTrip", null);
+                return new ApiBaseResult(true, "UpdateTrip", null);
             } catch (Exception e) {
                 myConn.Close();
-                return new OperationResult(false, "UpdateTrip", "Failed: " + e.Message);
+                return new ApiBaseResult(false, "UpdateTrip", "Failed: " + e.Message);
             } finally {
                 myConn.Close();
             }
@@ -132,14 +132,18 @@ namespace WhereYouAtCoreApi.Data {
         /// </summary>
         /// <param name="tripcode">The tripcode to find updates for.</param>
         /// <returns>Returns an OperationResult with a Result payload of a List<LocUpdate></returns>
-        public OperationResult GetAllMemberLocations(string tripcode) {
-            OperationResult result = new();
+        public MemberLocationResult GetAllMemberLocations(string tripcode) {
+            MemberLocationResult result = new();
             SqlConnection myConn = new(connectionString);
             List<LocUpdate> updates = new();
 
             try {
                 myConn.Open();
-                SqlCommand cmd = new("SELECT * FROM [tripentries] where [tripcode] = @tripcode", myConn);
+                SqlCommand cmd = new(
+                    "SELECT * " +
+                    "FROM [tripentries] " +
+                    "where [tripcode] = @tripcode", myConn
+                );
                 cmd.Parameters.AddWithValue("@tripcode", tripcode);
                 SqlDataAdapter da = new(cmd);
                 DataSet ds = new();
@@ -155,12 +159,13 @@ namespace WhereYouAtCoreApi.Data {
                    
                 }
                 result.WasSuccessful = true;
-                result.OperationSummary = "GetAllMemberLocations";
-                result.Result = updates;
+                result.Operation = "GetAllMemberLocations";
+                result.MemberLocations = updates;
+                result.GenericValue = updates.Count;
             } catch (Exception e) {
                 result.WasSuccessful = false;
-                result.OperationSummary = "GetAllMemberLocations";
-                result.Result = e.Message;
+                result.Operation = "GetAllMemberLocations";
+                result.GenericValue = e.Message;
             } finally {
                 myConn.Close();
             }

@@ -2,13 +2,14 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Configuration;
-using WhereYouAt.Api;
 using WhereYouAtCoreApi.Data;
-using WhereYouAtCoreApi.Models;
+using WhereYouAtCoreApi.Models.Requests;
+using WhereYouAtCoreApi.Models.Results;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace WhereYouAtCoreApi.Controllers {
+namespace WhereYouAtCoreApi.Controllers
+{
     [Route("api/[controller]")]
     [ApiController]
     public class TripsController : ControllerBase {
@@ -25,33 +26,41 @@ namespace WhereYouAtCoreApi.Controllers {
         }
 
         // GET: api/<ValuesController>
-/*        [HttpGet]
-        public IEnumerable<string> Get() {
-            return new string[] { "value1", "value2" };
-        }*/
+        /*        [HttpGet]
+                public IEnumerable<string> Get() {
+                    return new string[] { "value1", "value2" };
+                }*/
 
         // GET api/<ValuesController>/5
-        [HttpGet("{tripcode}")]
-        public OperationResult Get(string tripcode) => tripsRepository.GetAllMemberLocations(tripcode);
+        /*        [HttpGet("{tripcode}")]
+                public OperationResult Get(string tripcode) => tripsRepository.GetAllMemberLocations(tripcode);*/
+
+        [HttpGet]
+        public String Get([FromQuery(Name = "tripcode")] string tripcode) {
+            return tripsRepository.GetAllMemberLocations(tripcode).ToJson();
+        }
 
         // POST api/<ValuesController>
         [HttpPost]
-        public OperationResult Post([FromBody] ApiRequest request) {
+        public ApiBaseResult Post([FromBody] ApiRequest request) {
 
             OperationResults results = new();
-            OperationResult result = new();
-            request.Function = ApiRequest.TEST_FUNCTION;
-            long memberid = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            request.Arguments.Add(new("memberid", memberid));
+            ApiBaseResult result = new();
+
 
             switch (request.Function) {
+
+                // One argument:
+                //      member id   (long)
                 case ApiRequest.CREATE_NEW_TRIP:
                     result = tripsRepository.CreateTrip(
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), 
-                        false
-                    );
+                        (long)(request.Arguments[0].value));
                     result.WasSuccessful = true;
                     return result;
+                // Three arguments: 
+                //      tripcode:   (string)
+                //      memberid:   (long)
+                //      json:       (string)
                 case ApiRequest.UPDATE_TRIP:
                     result = tripsRepository.UpdateTrip(
                         "1p4e",
@@ -66,7 +75,8 @@ namespace WhereYouAtCoreApi.Controllers {
                     string tripcode = MakePsuedoEntries();
                     result = new();
                     result.WasSuccessful = true;
-                    result.Result = "Created fake trip: " + tripcode;
+                    result.Operation = "CreateFakeTripWithFakeEntries";
+                    result.GenericValue = tripcode;
                     return result;
                 default:
                     result = new();
@@ -78,12 +88,12 @@ namespace WhereYouAtCoreApi.Controllers {
 
         private string MakePsuedoEntries() {
             double memberid = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            OperationResult result = tripsRepository.CreateTrip(memberid);
+            ApiBaseResult result = tripsRepository.CreateTrip(memberid);
 
             for (int i = 0; i < 15; i++) {
-                tripsRepository.UpdateTrip(result!.Result!.ToString()!, memberid + i, "{ \"lat\": 43.88842, \"lon\": 16.555452 } ");
+                tripsRepository.UpdateTrip(result!.GenericValue!.ToString()!, memberid + i, "{ \"lat\": 43.88842, \"lon\": 16.555452 } ");
             }
-            return result!.Result!.ToString()!;
+            return result!.GenericValue!.ToString()!;
         }
 
         // PUT api/<ValuesController>/5

@@ -1,6 +1,7 @@
-﻿
-namespace WhereYouAtCoreApi.Models {
-    public class ApiRequest {
+﻿namespace WhereYouAtCoreApi.Models.Requests
+{
+    public class ApiRequest
+    {
         // OPERATIONS
         public const string CREATE_NEW_TRIP = "createnewtrip";
         public const string JOIN_TRIP = "jointrip";
@@ -43,10 +44,11 @@ namespace WhereYouAtCoreApi.Models {
             };
         }*/
 
-        public ApiRequest() { 
-            this.Function = CREATE_NEW_TRIP;
+        public ApiRequest()
+        {
+            Function = CREATE_NEW_TRIP;
         }
-        public string Function{ get; set; }
+        public string Function { get; set; }
         public List<Argument> Arguments { get; set; } = new List<Argument>();
 
     }
