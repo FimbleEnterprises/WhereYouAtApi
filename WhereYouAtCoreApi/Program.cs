@@ -1,4 +1,9 @@
+using MySqlConnector;
+using System.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
+
+/*const string MySqlAwsConnString = "server=aws-whereyouat-mysql.ckmu2uzvci2p.us-east-2.rds.amazonaws.com;user=fimtown;password=R3dst4ff;database=whereyouat";*/
 
 // Add services to the container.
 
@@ -7,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers().AddNewtonsoftJson();
-
+builder.Services.AddTransient<MySqlConnection>(_ => new MySqlConnection());
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

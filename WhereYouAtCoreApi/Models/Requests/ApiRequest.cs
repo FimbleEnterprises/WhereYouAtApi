@@ -17,6 +17,7 @@
         public const string GET_TRIP_MESSAGES = "gettripmessages";
         public const string TEST_FUNCTION = "TEST_FUNCTION";
         public const string TEST_RESPONSE = "testresponse";
+        public const string CLEANUP_TRIPS_TABLE = "cleanuptripstable";
 
         /*public enum Function {
             CREATE_NEW_TRIP,JOIN_TRIP,UPSERT_USER,UPDATE_TRIP,UPSERT_FCMTOKEN,
