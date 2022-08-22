@@ -12,17 +12,19 @@ namespace WhereYouAt.Api {
 	public class Trip {
 
 		[Key]
-		public long id { get; set; }
+		public long Id { get; set; }
 		public string? tripcode;
-		public double? createdon;
-		public double? createdby;
+		public long createdon;
+		public long? createdby;
 		public List<LocUpdate>? members = new();
 
-		public Trip() {}
+		public Trip() {
+			this.createdon = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        } 
 
 		public Trip(string tripcode) {
 			this.tripcode = tripcode;
-			this.createdon = DateTime.Now.ToOADate();
+			this.createdon = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		}
 
 		public Trip(string tripcode, long memberid, decimal lat, decimal lon) {
