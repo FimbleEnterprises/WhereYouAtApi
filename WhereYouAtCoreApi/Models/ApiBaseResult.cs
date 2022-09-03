@@ -1,11 +1,15 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace WhereYouAtCoreApi.Models.Results
 {
     public class ApiBaseResult {
-        public string? Operation { get; set; }
-        public bool WasSuccessful { get; set; } = false;
-        public object? GenericValue { get; set; }
+		[JsonProperty("Operation")]
+		public string? Operation { get; set; }
+		[JsonProperty("WasSuccessful")]
+		public bool WasSuccessful { get; set; } = false;
+		[JsonProperty("GenericValue")]
+		public object? GenericValue { get; set; }
 
         public ApiBaseResult() { }
 
@@ -15,13 +19,13 @@ namespace WhereYouAtCoreApi.Models.Results
 
         public ApiBaseResult(bool wasSuccessful, string operationSummary, object? result) {
             this.Operation = operationSummary;
-            this.WasSuccessful = wasSuccessful;
-            this.GenericValue = result;
+			this.WasSuccessful = wasSuccessful;
+			this.GenericValue = result;
         }
 
         public ApiBaseResult(bool wasSuccessful, string operationSummary) {
-            this.Operation = operationSummary;
-            this.WasSuccessful = wasSuccessful;
+            Operation = operationSummary;
+            WasSuccessful = wasSuccessful;
         }
 
         public string ToJson() {

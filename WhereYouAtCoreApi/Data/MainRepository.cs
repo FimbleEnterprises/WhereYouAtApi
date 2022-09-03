@@ -19,8 +19,9 @@ namespace WhereYouAtCoreApi.Data {
         
         private string GetConnectionString() {
             // string constring = config.GetConnectionString("DefaultConnection");
-            string constring = config.GetConnectionString("MySqlAwsConnection");
-            return constring;
+            // string constring = config.GetConnectionString("MySqlAwsConnection");
+            string constring = config.GetConnectionString("MySqlFinlandConnection");
+			return constring;
         }
 
         public enum OptionType {
@@ -166,6 +167,27 @@ namespace WhereYouAtCoreApi.Data {
             }
         }
 
+        public void WriteLogLine(string value, Severity severity) {
+            MySqlConnector.MySqlConnection myConn = new MySqlConnector.MySqlConnection(GetConnectionString());
+            try {
+
+                myConn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM [debuglogging] WHERE 1=2", myConn);
+                MySqlDataAdapter da = new MySqlDataAdapter(cmd);
+                MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
+                DataSet ds = new DataSet();
+                da.Fill(ds);
+                DataRow dr = ds.Tables[0].NewRow();
+                dr["createdon"] = DateTime.UtcNow;
+                dr["severity"] = severity;
+                dr["message"] = value;
+                ds.Tables[0].Rows.Add(dr);
+                da.Update(ds);
+                myConn.Close();
+            } catch (Exception fuckyou) {
+                myConn.Close();
+            }
+        }
 
     }
 }
