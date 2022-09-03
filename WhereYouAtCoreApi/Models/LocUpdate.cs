@@ -14,8 +14,8 @@ namespace WhereYouAtCoreApi.Models {
         public long? Createdon { get; set; }
         public int? Elevation { get; set; }
         public float? Speed { get; set; }
-        public float? Accuracy { get; set; }
-        public float? Bearing { get; set; }
+		public float? Bearing { get; set; }
+		public float? Accuracy { get; set; }
 
         public LocUpdate() { }
 
