@@ -14,14 +14,14 @@ namespace WhereYouAtCoreApi.Models.Results
         }
 
         public ApiBaseResult(bool wasSuccessful, string operationSummary, object? result) {
-            Operation = operationSummary;
-            WasSuccessful = wasSuccessful;
-            GenericValue = result;
+            this.Operation = operationSummary;
+            this.WasSuccessful = wasSuccessful;
+            this.GenericValue = result;
         }
 
         public ApiBaseResult(bool wasSuccessful, string operationSummary) {
-            Operation = operationSummary;
-            WasSuccessful = wasSuccessful;
+            this.Operation = operationSummary;
+            this.WasSuccessful = wasSuccessful;
         }
 
         public string ToJson() {

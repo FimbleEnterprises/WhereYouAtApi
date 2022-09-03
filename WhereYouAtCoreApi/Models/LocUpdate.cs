@@ -13,6 +13,9 @@ namespace WhereYouAtCoreApi.Models {
         public decimal? Lon { get; set; }
         public long? Createdon { get; set; }
         public int? Elevation { get; set; }
+        public float? Speed { get; set; }
+        public float? Accuracy { get; set; }
+        public float? Bearing { get; set; }
 
         public LocUpdate() { }
 

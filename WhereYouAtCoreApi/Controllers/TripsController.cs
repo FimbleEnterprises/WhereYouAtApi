@@ -74,7 +74,7 @@ namespace WhereYouAtCoreApi.Controllers
                     return result;
 
                 // One argument
-                //      locupdate (LocUpdate) (as created by some other language e.g. Kotlin)
+                // locupdate (LocUpdate) (as created by some other language e.g. Kotlin)
                 // Returns ApiBaseResult with its GenericValue property being null and the WasSuccessful property reflecting success/failure.
                 case ApiRequest.UPDATE_TRIP:
                     // LocUpdate locUpdate = new("{\"Createdon\":\"2022-08-13T20:30:01.113\",\"Elevation\":45,\"Lat\":12.445554,\"Lon\":5.444333,\"Memberid\":1660440576512,\"Tripcode\":\"SEAVI\"}"!);
