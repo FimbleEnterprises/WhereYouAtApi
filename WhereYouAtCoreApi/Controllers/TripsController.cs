@@ -131,7 +131,22 @@ namespace WhereYouAtCoreApi.Controllers
             for (int i = 0; i < number; i++) {
                 double lat = GetRandomNumberInRange(45.2804722, 45.2504722);
                 double lon = GetRandomNumberInRange(-93.716118, -93.719118);
-                LocUpdate loc = new(result.GenericValue!.ToString()!, (long)Convert.ToDouble(memberid + i), Convert.ToDecimal(lat), Convert.ToDecimal(lon));
+                string googleid = "116830684150145127689";
+                string token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImU4NDdkOTk0OGU4NTQ1OTQ4ZmE4MTU3YjczZTkxNWM1NjczMDJkNGUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIzOTUwOTAxNjgwNzAtY2l2cHNvNnZqbWE2a3I5b2p2YmhsbmxsZmN0cjNucXEuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIzOTUwOTAxNjgwNzAtZG8zMHB0Yzk0b2M4MXR1NTdjY283YThwcDMzbG5hZ2suYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTY4MzA2ODQxNTAxNDUxMjc2ODkiLCJlbWFpbCI6IndlYmVyLm1hdGhld0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ik1hdHQgV2ViZXIiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EtL0FGZFp1Y3Etb0hCU1VCTlhHWG93V1ZPRmZvZUtsRXF3QXo2dzA0czRUM3lteUV3PXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Ik1hdHQiLCJmYW1pbHlfbmFtZSI6IldlYmVyIiwibG9jYWxlIjoiZW4iLCJpYXQiOjE2NjIzODY3NzUsImV4cCI6MTY2MjM5MDM3NX0.lGoktYE84tYqKq5N19Xc_Yz-kNWyXTgHwxPgbW-5pG8L-BQv2sKNGRnpXuDb5PA1443LIao93WZDNgLaEfIXDBcnzmP6N1MrLBsY6RJcZpIThSR-mkWB_Uojn4zTYyKO68tM6ja6lEIAtJWcbPVyi-fVrdiDR9pKLJOd__fuUzwj33_uoKL6m57x56Wors0YJ9E_Ais191kD4XnEbDUM3XSGFAEjvK2Wt3YZoR6Z9ttG6nMxm0EqVCSBa42fIIrzBFF6cVRraFmMODA6Lvr2lMCM42wyEZ4Gr_Y6aFP4gBd3SWfwxvizziCMFPqt8XgHoq7KF2pUe-gUJwqbHAA4vw";
+                string avatarurl = "https://lh3.googleusercontent.com/a-/AFdZucq-oHBSUBNXGXowWVOFfoeKlEqwAz6w04s4T3ymyEw=s96-c";
+                string displayname = "Matt Weber";
+                string email = "weber.mathew@gmail.com";
+				LocUpdate loc = new(
+                    result.GenericValue!.ToString()!, 
+                    (long)Convert.ToDouble(memberid + i), 
+                    Convert.ToDecimal(lat), 
+                    Convert.ToDecimal(lon),
+                    0,
+                    displayname,
+                    token,
+                    googleid,
+                    avatarurl
+                );
                 loc.Elevation = 34;
                 loc.MemberName = "Member " + i;
                 tripsRepository.UpdateTrip(loc);

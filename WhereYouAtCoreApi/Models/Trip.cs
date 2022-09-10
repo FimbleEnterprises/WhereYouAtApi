@@ -22,16 +22,6 @@ namespace WhereYouAt.Api {
 			this.createdon = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         } 
 
-		public Trip(string tripcode) {
-			this.tripcode = tripcode;
-			this.createdon = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		}
-
-		public Trip(string tripcode, long memberid, decimal lat, decimal lon) {
-			this.tripcode = tripcode;
-			this.members.Add(new LocUpdate(tripcode, memberid, lat, lon));
-		}
-
 		public string ToJson() {
 			return Newtonsoft.Json.JsonConvert.SerializeObject(this);
 		}

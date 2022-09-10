@@ -224,6 +224,11 @@ namespace WhereYouAtCoreApi.Data
 					dr["speed"] = update.Speed;
 					dr["bearing"] = update.Bearing;
 					dr["accuracy"] = update.Accuracy;
+					dr["name"] = update.DisplayName;
+					dr["googleid"] = update.GoogleId;
+					dr["token"] = update.Token;
+					dr["avatarurl"] = update.AvatarUrl;
+					dr["email"] = update.Email;
 					ds.Tables[0].Rows.Add(dr);
                 } else {
                     ds.Tables[0].Rows[0]["tripcode"] = update.Tripcode;
@@ -235,6 +240,11 @@ namespace WhereYouAtCoreApi.Data
 					ds.Tables[0].Rows[0]["speed"] = update.Speed;
 					ds.Tables[0].Rows[0]["bearing"] = update.Bearing;
 					ds.Tables[0].Rows[0]["accuracy"] = update.Accuracy;
+					ds.Tables[0].Rows[0]["name"] = update.DisplayName;
+					ds.Tables[0].Rows[0]["googleid"] = update.GoogleId;
+					ds.Tables[0].Rows[0]["token"] = update.Token;
+					ds.Tables[0].Rows[0]["avatarurl"] = update.AvatarUrl;
+					ds.Tables[0].Rows[0]["email"] = update.Email;
 				}
                 da.Update(ds);
                 TimestampTripTable(update.Tripcode!);
@@ -272,9 +282,22 @@ namespace WhereYouAtCoreApi.Data
                     dr["lon"] = update.Lon;
                     dr["elevation"] = update.Elevation;
                     dr["member_name"] = update.MemberName;
-                    dr["speed"] = update.Speed;
-					dr["bearing"] = update.Bearing;
-					dr["accuracy"] = update.Accuracy;
+                    if (update.Speed != null) {
+						dr["speed"] = update.Speed;
+					}
+					if(update.Bearing != null)
+                    {
+						dr["bearing"] = update.Bearing;
+					}
+					if (update.Accuracy != null)
+                    {
+						dr["accuracy"] = update.Accuracy;
+					}
+                    dr["name"] = update.DisplayName;
+                    dr["googleid"] = update.GoogleId;
+                    dr["token"] = update.Token;
+                    dr["avatarurl"] = update.AvatarUrl;
+                    dr["email"] = update.Email;
 					ds.Tables[0].Rows.Add(dr);
                 } else {
                     ds.Tables[0].Rows[0]["tripcode"] = update.Tripcode;
@@ -283,9 +306,22 @@ namespace WhereYouAtCoreApi.Data
                     ds.Tables[0].Rows[0]["lon"] = update.Lon;
                     ds.Tables[0].Rows[0]["elevation"] = update.Elevation;
                     ds.Tables[0].Rows[0]["member_name"] = update.MemberName;
-					ds.Tables[0].Rows[0]["speed"] = update.Speed;
-					ds.Tables[0].Rows[0]["bearing"] = update.Bearing;
-					ds.Tables[0].Rows[0]["accuracy"] = update.Accuracy;
+                    if (update.Speed != null) {
+						ds.Tables[0].Rows[0]["speed"] = update.Speed;
+					}
+                    if (update.Bearing != null)
+                    {
+                        ds.Tables[0].Rows[0]["bearing"] = update.Bearing;
+                    }
+                    if (update.Accuracy != null)
+                    {
+                        ds.Tables[0].Rows[0]["accuracy"] = update.Accuracy;
+                    }
+					ds.Tables[0].Rows[0]["name"] = update.DisplayName;
+					ds.Tables[0].Rows[0]["googleid"] = update.GoogleId;
+					ds.Tables[0].Rows[0]["token"] = update.Token;
+					ds.Tables[0].Rows[0]["avatarurl"] = update.AvatarUrl;
+					ds.Tables[0].Rows[0]["email"] = update.Email;
 				}
                 da.Update(ds);
                 TimestampTripTable(update.Tripcode!);
@@ -393,9 +429,9 @@ namespace WhereYouAtCoreApi.Data
                         if (row["lon"] != DBNull.Value) { loc.Lon = Convert.ToDecimal(row["lon"]); }
                         if (row["elevation"] != DBNull.Value) { loc.Elevation = Convert.ToInt16(row["elevation"]); }
                         if (row["member_name"] != DBNull.Value) { loc.MemberName = row["member_name"].ToString(); }
-						if (row["speed"] != DBNull.Value) { loc.Speed = (float)Convert.ToDouble(row["speed"]); }
-						if (row["bearing"] != DBNull.Value) { loc.Bearing = (float)Convert.ToDouble(row["bearing"]); }
-						if (row["accuracy"] != DBNull.Value) { loc.Accuracy = (float)Convert.ToDouble(row["accuracy"]); }
+						if (row["speed"] != DBNull.Value) { loc.Speed = Convert.ToDecimal(row["speed"]); }
+						if (row["bearing"] != DBNull.Value) { loc.Bearing = Convert.ToDecimal(row["bearing"]); }
+						if (row["accuracy"] != DBNull.Value) { loc.Accuracy = Convert.ToDecimal(row["accuracy"]); }
 						updates.Add(loc);
                     } catch (Exception e1) {
                         string error = e1.Message;
@@ -439,9 +475,14 @@ namespace WhereYouAtCoreApi.Data
                         if (reader["lon"] != DBNull.Value) { loc.Lon = Convert.ToDecimal(reader["lon"]); }
                         if (reader["elevation"] != DBNull.Value) { loc.Elevation = Convert.ToInt16(reader["elevation"]); }
                         if (reader["member_name"] != DBNull.Value) { loc.MemberName = reader["member_name"].ToString(); }
-						if (reader["speed"] != DBNull.Value) { loc.Speed = (float) Convert.ToDouble(reader["speed"]); }
-						if (reader["bearing"] != DBNull.Value) { loc.Bearing = (float)Convert.ToDouble(reader["bearing"]); }
-						if (reader["accuracy"] != DBNull.Value) { loc.Accuracy = (float)Convert.ToDouble(reader["accuracy"]); }
+						if (reader["speed"] != DBNull.Value) { loc.Speed = Convert.ToDecimal(reader["speed"]); }
+						if (reader["bearing"] != DBNull.Value) { loc.Bearing = Convert.ToDecimal(reader["bearing"]); }
+						if (reader["accuracy"] != DBNull.Value) { loc.Accuracy = Convert.ToDecimal(reader["accuracy"]); }
+						if (reader["name"] != DBNull.Value) { loc.DisplayName = reader["name"].ToString(); }
+						if (reader["googleid"] != DBNull.Value) { loc.GoogleId = reader["googleid"].ToString(); }
+						if (reader["token"] != DBNull.Value) { loc.Token = reader["token"].ToString(); }
+						if (reader["avatarurl"] != DBNull.Value) { loc.AvatarUrl = reader["avatarurl"].ToString(); }
+						if (reader["email"] != DBNull.Value) { loc.Email = reader["email"].ToString(); }
 						updates.Add(loc);
                     }
                 }
