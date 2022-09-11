@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32804.467
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhereYouAtCoreApi", "WhereYouAtCoreApi\WhereYouAtCoreApi.csproj", "{2AA13DE9-771A-42B0-B5BF-5FA219236CDA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhereYouAtCoreApi", "WhereYouAtCoreApi\WhereYouAtCoreApi.csproj", "{2AA13DE9-771A-42B0-B5BF-5FA219236CDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
