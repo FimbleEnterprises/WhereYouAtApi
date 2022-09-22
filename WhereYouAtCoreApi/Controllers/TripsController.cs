@@ -53,6 +53,32 @@ namespace WhereYouAtCoreApi.Controllers
             return tripsRepository.TripIsActive(tripcode).ToJson();
         }
 
+        /// <summary>
+        /// Gets the desired update frequency for the clients to use when requesting/uploading locations.
+        /// </summary>
+        /// <param name="tripcode"></param>
+        /// <returns></returns>
+        [HttpGet("updaterate")]
+        public String UpdateRate() {
+            return tripsRepository.GetUpdateRate().ToJson();
+        }
+
+        [HttpGet("test")]
+        public String Test() {
+            ApiBaseResult writeTestResult = mainRepository.TestConnectivityAddRow();
+            ApiBaseResult deleteTestResult = mainRepository.TestConnectivityDelRow();
+            ApiBaseResult finalResult = new("TestConnectivity");
+            if (writeTestResult.WasSuccessful && deleteTestResult.WasSuccessful) {
+                finalResult.WasSuccessful = true;
+                finalResult.GenericValue = "Successfull read/write!";
+            } else {
+                finalResult.WasSuccessful = false;
+                finalResult.GenericValue = "Failed to read/write";
+            }
+
+            return finalResult.ToJson();
+        }
+
         // POST api/<ValuesController>
         [HttpPost]
         public ApiBaseResult Post([FromBody] ApiRequest request) {
@@ -70,21 +96,30 @@ namespace WhereYouAtCoreApi.Controllers
                 case ApiRequest.CREATE_NEW_TRIP:
                     result = tripsRepository.CreateTrip(
                         (long)(request.Arguments[0].value));
-                    result.WasSuccessful = true;
+                    return result;
+
+                case ApiRequest.LEAVE_TRIP:
+                    result = tripsRepository.LeaveTrip(
+                        (long)(request.Arguments[0].value));
                     return result;
 
                 // One argument
                 // locupdate (LocUpdate) (as created by some other language e.g. Kotlin)
                 // Returns ApiBaseResult with its GenericValue property being null and the WasSuccessful property reflecting success/failure.
                 case ApiRequest.UPDATE_TRIP:
-                    // LocUpdate locUpdate = new("{\"Createdon\":\"2022-08-13T20:30:01.113\",\"Elevation\":45,\"Lat\":12.445554,\"Lon\":5.444333,\"Memberid\":1660440576512,\"Tripcode\":\"SEAVI\"}"!);
-                    mainRepository.WriteLogLine("UPDATE_TRIP: " + request.Arguments[0], MainRepository.Severity.LOW);
                     try {
                         // Convert the passed LocUpdate object to JSON
                         string serializedLocUpdate = SerializeObject(request.Arguments[0].value);
                         // Convert the JSON into OUR version of a LocUpdate
                         LocUpdate locUpdate = DeserializeObject<LocUpdate>(serializedLocUpdate)!;
                         result = tripsRepository.UpdateTrip(locUpdate);
+                        // Remove users that haven't sent an update in awhile (2 minutes I believe)
+                        /*if (locUpdate != null && locUpdate.Tripcode != null) {
+                            ApiBaseResult aResult = tripsRepository.AreZombiesPresent(locUpdate.Tripcode);
+                            if ((bool) aResult.GenericValue == true) {
+                                tripsRepository.RemoveZombieMembers(locUpdate.Tripcode);
+                            }
+                        }*/
                     } catch (Exception e1) {
                         mainRepository.WriteLogLine(e1.Message + "\n" + e1.StackTrace, MainRepository.Severity.HIGH);
                     }
@@ -132,11 +167,13 @@ namespace WhereYouAtCoreApi.Controllers
                 double lat = GetRandomNumberInRange(45.2804722, 45.2504722);
                 double lon = GetRandomNumberInRange(-93.716118, -93.719118);
                 string googleid = "116830684150145127689";
-                string token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImU4NDdkOTk0OGU4NTQ1OTQ4ZmE4MTU3YjczZTkxNWM1NjczMDJkNGUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIzOTUwOTAxNjgwNzAtY2l2cHNvNnZqbWE2a3I5b2p2YmhsbmxsZmN0cjNucXEuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIzOTUwOTAxNjgwNzAtZG8zMHB0Yzk0b2M4MXR1NTdjY283YThwcDMzbG5hZ2suYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTY4MzA2ODQxNTAxNDUxMjc2ODkiLCJlbWFpbCI6IndlYmVyLm1hdGhld0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ik1hdHQgV2ViZXIiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EtL0FGZFp1Y3Etb0hCU1VCTlhHWG93V1ZPRmZvZUtsRXF3QXo2dzA0czRUM3lteUV3PXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Ik1hdHQiLCJmYW1pbHlfbmFtZSI6IldlYmVyIiwibG9jYWxlIjoiZW4iLCJpYXQiOjE2NjIzODY3NzUsImV4cCI6MTY2MjM5MDM3NX0.lGoktYE84tYqKq5N19Xc_Yz-kNWyXTgHwxPgbW-5pG8L-BQv2sKNGRnpXuDb5PA1443LIao93WZDNgLaEfIXDBcnzmP6N1MrLBsY6RJcZpIThSR-mkWB_Uojn4zTYyKO68tM6ja6lEIAtJWcbPVyi-fVrdiDR9pKLJOd__fuUzwj33_uoKL6m57x56Wors0YJ9E_Ais191kD4XnEbDUM3XSGFAEjvK2Wt3YZoR6Z9ttG6nMxm0EqVCSBa42fIIrzBFF6cVRraFmMODA6Lvr2lMCM42wyEZ4Gr_Y6aFP4gBd3SWfwxvizziCMFPqt8XgHoq7KF2pUe-gUJwqbHAA4vw";
+                string token = "";
                 string avatarurl = "https://lh3.googleusercontent.com/a-/AFdZucq-oHBSUBNXGXowWVOFfoeKlEqwAz6w04s4T3ymyEw=s96-c";
                 string displayname = "Matt Weber";
                 string email = "weber.mathew@gmail.com";
-				LocUpdate loc = new(
+                int isbg = 1;
+                string misc1 = "somedata";
+                LocUpdate loc = new(
                     result.GenericValue!.ToString()!, 
                     (long)Convert.ToDouble(memberid + i), 
                     Convert.ToDecimal(lat), 
@@ -145,7 +182,10 @@ namespace WhereYouAtCoreApi.Controllers
                     displayname,
                     token,
                     googleid,
-                    avatarurl
+                    avatarurl,
+                    "weber.fucker@fuck.fuk",
+                    0,
+                    null
                 );
                 loc.Elevation = 34;
                 loc.MemberName = "Member " + i;

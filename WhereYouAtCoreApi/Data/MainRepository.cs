@@ -1,12 +1,16 @@
 ﻿using Microsoft.Data.SqlClient;
 using MySqlConnector;
+using Newtonsoft.Json.Linq;
 using NuGet.Common;
 using System.Data;
 using WhereYouAt.Api;
 using WhereYouAtCoreApi.Models.Results;
+using static WhereYouAtCoreApi.Data.MainRepository;
 
 namespace WhereYouAtCoreApi.Data {
    public class MainRepository {
+
+        private const string CONNECTIVITY_TEST = "CONNECTIVITY_TEST";
 
         public IConfiguration? config { get; set; }
         public string connectionString { get; set; }
@@ -106,7 +110,7 @@ namespace WhereYouAtCoreApi.Data {
             try {
 
                 myConn.Open();
-                SqlCommand cmd = new SqlCommand("SELECT * FROM [debuglogging] WHERE 1=2", myConn);
+                SqlCommand cmd = new SqlCommand("SELECT * FROM [debug_logging] WHERE 1=2", myConn);
                 SqlDataAdapter da = new SqlDataAdapter(cmd);
                 SqlCommandBuilder cb = new SqlCommandBuilder(da);
                 DataSet ds = new DataSet();
@@ -128,7 +132,7 @@ namespace WhereYouAtCoreApi.Data {
             try {
 
                 myConn.Open();
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM whereyouat.debuglogging WHERE 1=2", myConn);
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM whereyouat.debug_logging WHERE 1=2", myConn);
                 MySqlDataAdapter da = new MySqlDataAdapter(cmd);
                 MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
                 DataSet ds = new DataSet();
@@ -145,6 +149,61 @@ namespace WhereYouAtCoreApi.Data {
             } finally {
                 CleanUpOldLogs();
             }
+        } 
+
+        public ApiBaseResult TestConnectivityDelRow() {
+            ApiBaseResult apiBaseResult = new ApiBaseResult("DeleteDebugRow");
+            MySqlConnection myConn = new(connectionString);
+            try {
+                myConn.Open();
+                double twoHours = 7200000;
+                double currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                double cutoffTime = currentTime - twoHours;
+                MySqlCommand cmd = new("DELETE FROM `debug_logging` where `message` = @connectivitytestentry", myConn);
+                cmd.Parameters.AddWithValue("@connectivitytestentry", CONNECTIVITY_TEST);
+                int rowsDeleted = cmd.ExecuteNonQuery();
+                apiBaseResult.GenericValue = "ROW (" + CONNECTIVITY_TEST + ") DELETED";
+                apiBaseResult.WasSuccessful = rowsDeleted > 0;
+            } catch (Exception e) {
+                apiBaseResult.WasSuccessful = false;
+                apiBaseResult.GenericValue = e.Message;
+                WriteLogLine("Failed database delete test!" +
+                    "Error: " + e.Message, Severity.LOW);
+            } finally {
+                myConn.Close();
+            }
+            return apiBaseResult;
+        }
+
+        public ApiBaseResult TestConnectivityAddRow() {
+
+            MySqlConnector.MySqlConnection myConn = new MySqlConnector.MySqlConnection(GetConnectionString());
+            ApiBaseResult apiBaseResult = new ApiBaseResult("TestConnectivityAddRow");
+            
+            try {
+                myConn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM whereyouat.debug_logging WHERE 1=2", myConn);
+                MySqlDataAdapter da = new MySqlDataAdapter(cmd);
+                MySqlCommandBuilder cb = new MySqlCommandBuilder(da);
+                DataSet ds = new DataSet();
+                da.Fill(ds);
+                DataRow dr = ds.Tables[0].NewRow();
+                dr["message"] = CONNECTIVITY_TEST;
+                dr["severity"] = 0;
+                dr["createdon"] = DateTime.Now;
+                ds.Tables[0].Rows.Add(dr);
+                da.Update(ds);
+                myConn.Close();
+                apiBaseResult.WasSuccessful = true;
+                apiBaseResult.GenericValue = "Successfully created a row in the debug_logging table";
+            } catch (Exception fuckyou) {
+                apiBaseResult.WasSuccessful = false;
+                apiBaseResult.GenericValue = "Failed to create a row in the debug_logging table.  Error: " + fuckyou.Message;
+                myConn.Close();
+            } finally {
+                CleanUpOldLogs();
+            }
+            return apiBaseResult;
         }
 
         /// <summary>

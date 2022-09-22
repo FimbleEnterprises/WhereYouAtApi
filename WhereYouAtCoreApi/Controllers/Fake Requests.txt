@@ -1,0 +1,11 @@
+﻿UPDATE TRIP
+
+{
+  "function": "updatetrip",
+  "arguments": [
+    {
+      "name": "string",
+      "value": {"Accuracy":20.0,"AvatarUrl":"https://lh3.googleusercontent.com/a-/AFdZucq-oHBSUBNXGXowWVOFfoeKlEqwAz6w04s4T3ymyEw\u003ds96-c","Bearing":166.263,"Createdon":1663179780464,"DisplayName":"Matt Weber","Elevation":0.0,"Email":"weber.mathew@gmail.com","GoogleId":"116830684150145127689","IsBg":0,"Lat":45.2628271,"Lon":-93.6555839,"MemberName":"Me","Memberid":1661653386374,"Speed":7.7731557,"Tripcode":"D00M1"}
+    }
+  ]
+}

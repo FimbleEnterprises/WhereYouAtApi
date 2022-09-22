@@ -98,6 +98,31 @@ namespace WhereYouAtCoreApi.Data
             }
             return result;
         }
+        public ApiBaseResult GetUpdateRate() {
+            MySqlConnection myConn = new(connectionString);
+            ApiBaseResult result = new ApiBaseResult("GetUpdateRate");
+            myConn.Open();
+            MySqlCommand cmd = new("SELECT val_int FROM `settings` where `name` = 'foreground_request_rate'", myConn);
+            MySqlDataAdapter da = new(cmd);
+            MySqlCommandBuilder cb = new(da);
+            DataSet ds = new();
+            da.Fill(ds);
+
+            if (ds.Tables[0].Rows.Count == 0) { // not found -> trip not active.
+                result.GenericValue = 1;
+                result.WasSuccessful = true;
+                return result;
+            } else { // trip found => check if it's been updated recently enough to be valid.
+                DataRow row = ds.Tables[0].Rows[0];
+                if (row["val_int"] != DBNull.Value) { 
+                    result.GenericValue = Convert.ToInt32(row["val_int"]);
+                    result.WasSuccessful = true;
+                    return result;
+                }
+            }
+            result.WasSuccessful = false;
+            return result;
+        }
 
         /// <summary>
         /// Generates a random string of characters of the given length.  Uses the the GetRandomFileName() method from System.IO which leverages the crypto library to ensure better random results.  
@@ -165,7 +190,7 @@ namespace WhereYouAtCoreApi.Data
 
             // Create unique trip code then ensure that it doesn't already exist in the trip table.
             while (!codeIsUnique) {
-                newTripCode = generateTripcode(5);
+                newTripCode = generateTripcode(4);
                 codeIsUnique = !TripCodeAlreadyExists(newTripCode);
             }
 
@@ -194,6 +219,30 @@ namespace WhereYouAtCoreApi.Data
             } finally {
                 myConn.Close();
             }
+        }
+
+        public ApiBaseResult LeaveTrip(double memberid) {
+            ApiBaseResult apiBaseResult = new ApiBaseResult("CleanUpTripTable");
+            MySqlConnection myConn = new(connectionString);
+            try {
+                myConn.Open();
+                double twoHours = 7200000;
+                double currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                double cutoffTime = currentTime - twoHours;
+                MySqlCommand cmd = new("DELETE FROM `tripentries` where `memberid` = " + memberid, myConn);
+                int rowsDeleted = cmd.ExecuteNonQuery();
+                apiBaseResult.GenericValue = "User " + memberid + " was removed from the trip.";
+                apiBaseResult.WasSuccessful = rowsDeleted > 0;
+                WriteLogLine("User was removed.", Severity.LOW);
+            } catch (Exception e) {
+                apiBaseResult.WasSuccessful = false;
+                apiBaseResult.GenericValue = e.Message;
+                WriteLogLine("Failed remove user from trip!" +
+                    "Error: " + e.Message, Severity.LOW);
+            } finally {
+                myConn.Close();
+            }
+            return apiBaseResult;
         }
 
         /// <summary>
@@ -226,9 +275,10 @@ namespace WhereYouAtCoreApi.Data
 					dr["accuracy"] = update.Accuracy;
 					dr["name"] = update.DisplayName;
 					dr["googleid"] = update.GoogleId;
-					dr["token"] = update.Token;
 					dr["avatarurl"] = update.AvatarUrl;
 					dr["email"] = update.Email;
+                    dr["isbg"] = update.IsBg;
+                    dr["misc1"] = update.Misc1;
 					ds.Tables[0].Rows.Add(dr);
                 } else {
                     ds.Tables[0].Rows[0]["tripcode"] = update.Tripcode;
@@ -242,10 +292,11 @@ namespace WhereYouAtCoreApi.Data
 					ds.Tables[0].Rows[0]["accuracy"] = update.Accuracy;
 					ds.Tables[0].Rows[0]["name"] = update.DisplayName;
 					ds.Tables[0].Rows[0]["googleid"] = update.GoogleId;
-					ds.Tables[0].Rows[0]["token"] = update.Token;
 					ds.Tables[0].Rows[0]["avatarurl"] = update.AvatarUrl;
 					ds.Tables[0].Rows[0]["email"] = update.Email;
-				}
+                    ds.Tables[0].Rows[0]["isbg"] = update.IsBg;
+                    ds.Tables[0].Rows[0]["misc1"] = update.Misc1;
+                }
                 da.Update(ds);
                 TimestampTripTable(update.Tripcode!);
                 return new ApiBaseResult(true, "UpdateTrip", null);
@@ -295,10 +346,11 @@ namespace WhereYouAtCoreApi.Data
 					}
                     dr["name"] = update.DisplayName;
                     dr["googleid"] = update.GoogleId;
-                    dr["token"] = update.Token;
                     dr["avatarurl"] = update.AvatarUrl;
                     dr["email"] = update.Email;
-					ds.Tables[0].Rows.Add(dr);
+                    dr["isbg"] = update.IsBg;
+                    dr["misc1"] = update.Misc1;
+                    ds.Tables[0].Rows.Add(dr);
                 } else {
                     ds.Tables[0].Rows[0]["tripcode"] = update.Tripcode;
                     ds.Tables[0].Rows[0]["createdon"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -319,10 +371,11 @@ namespace WhereYouAtCoreApi.Data
                     }
 					ds.Tables[0].Rows[0]["name"] = update.DisplayName;
 					ds.Tables[0].Rows[0]["googleid"] = update.GoogleId;
-					ds.Tables[0].Rows[0]["token"] = update.Token;
 					ds.Tables[0].Rows[0]["avatarurl"] = update.AvatarUrl;
 					ds.Tables[0].Rows[0]["email"] = update.Email;
-				}
+                    ds.Tables[0].Rows[0]["isbg"] = update.IsBg;
+                    ds.Tables[0].Rows[0]["misc1"] = update.Misc1;
+                }
                 da.Update(ds);
                 TimestampTripTable(update.Tripcode!);
                 return new ApiBaseResult(true, "UpdateTrip", null);
@@ -357,6 +410,68 @@ namespace WhereYouAtCoreApi.Data
             } finally {
                 myConn.Close();
             }
+        }
+
+        public ApiBaseResult AreZombiesPresent(string tripcode) {
+            ApiBaseResult apiBaseResult = new ApiBaseResult("CleanUpTripTable");
+
+            MySqlConnection myConn = new(connectionString);
+
+            try {
+                double threeMinutes = 18000;
+                double currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                double cutoffTime = currentTime - threeMinutes;
+
+                myConn.Open();
+                MySqlCommand cmd = new("SELECT * FROM `tripentries` WHERE `tripcode` = @tripcode AND `createdon` < " + cutoffTime, myConn);
+                cmd.Parameters.AddWithValue("@tripcode", tripcode);
+                
+                MySqlDataAdapter da = new(cmd);
+                DataSet ds = new();
+                da.Fill(ds);
+                
+                if (ds.Tables[0].Rows.Count > 0) {
+                    apiBaseResult.WasSuccessful = true;
+                    apiBaseResult.GenericValue = true;
+                } else {
+                    apiBaseResult.WasSuccessful = true;
+                    apiBaseResult.GenericValue = false;
+                }
+                myConn.Close();
+            } catch (Exception e) {
+
+            } finally {
+                myConn.Close();
+            }
+
+            return apiBaseResult;
+        }
+
+            public ApiBaseResult RemoveZombieMembers(string tripcode) {
+            ApiBaseResult apiBaseResult = new ApiBaseResult("CleanUpTripTable");
+            MySqlConnection myConn = new(connectionString);
+            try {
+                myConn.Open();
+                double threeMinutes = 18000;
+                double currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                double cutoffTime = currentTime - threeMinutes;
+                MySqlCommand cmd = new("DELETE FROM `tripentries` where `tripcode` = @tripcode and `createdon` < " + cutoffTime, myConn);
+                cmd.Parameters.AddWithValue("@tripcode", tripcode);
+                int rowsDeleted = cmd.ExecuteNonQuery();
+                apiBaseResult.GenericValue = rowsDeleted;
+                apiBaseResult.WasSuccessful = true;
+                if (rowsDeleted > 0) {
+                    WriteLogLine("Cleaned up " + rowsDeleted + " zombie users in trip " + tripcode, Severity.LOW);
+                }
+            } catch (Exception e) {
+                apiBaseResult.WasSuccessful = false;
+                apiBaseResult.GenericValue = e.Message;
+                WriteLogLine("Failed to cleanup zombie uers" +
+                    "Error: " + e.Message, Severity.LOW);
+            } finally {
+                myConn.Close();
+            }
+            return apiBaseResult;
         }
 
         /// <summary>
@@ -432,7 +547,9 @@ namespace WhereYouAtCoreApi.Data
 						if (row["speed"] != DBNull.Value) { loc.Speed = Convert.ToDecimal(row["speed"]); }
 						if (row["bearing"] != DBNull.Value) { loc.Bearing = Convert.ToDecimal(row["bearing"]); }
 						if (row["accuracy"] != DBNull.Value) { loc.Accuracy = Convert.ToDecimal(row["accuracy"]); }
-						updates.Add(loc);
+                        if (row["isbg"] != DBNull.Value) { loc.IsBg = Convert.ToInt16(row["isbg"]); }
+                        if (row["misc1"] != DBNull.Value) { loc.Misc1 = (row["misc1"]).ToString(); }
+                        updates.Add(loc);
                     } catch (Exception e1) {
                         string error = e1.Message;
                     }                 
@@ -480,10 +597,11 @@ namespace WhereYouAtCoreApi.Data
 						if (reader["accuracy"] != DBNull.Value) { loc.Accuracy = Convert.ToDecimal(reader["accuracy"]); }
 						if (reader["name"] != DBNull.Value) { loc.DisplayName = reader["name"].ToString(); }
 						if (reader["googleid"] != DBNull.Value) { loc.GoogleId = reader["googleid"].ToString(); }
-						if (reader["token"] != DBNull.Value) { loc.Token = reader["token"].ToString(); }
 						if (reader["avatarurl"] != DBNull.Value) { loc.AvatarUrl = reader["avatarurl"].ToString(); }
 						if (reader["email"] != DBNull.Value) { loc.Email = reader["email"].ToString(); }
-						updates.Add(loc);
+                        if (reader["isbg"] != DBNull.Value) { loc.IsBg = Convert.ToInt16(reader["isbg"]); }
+                        if (reader["misc1"] != DBNull.Value) { loc.Misc1 = (reader["misc1"]).ToString(); }
+                        updates.Add(loc);
                     }
                 }
                 result.WasSuccessful = true;
